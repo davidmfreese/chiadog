@@ -27,6 +27,8 @@ class StatsManager:
         try:
             self._enable = config["enable"]
             self._time_of_day = config["time_of_day"]
+            self._intraday_updates_enable = config.get("intraday_updates_enable", False)
+            self._intraday_updates_frequency_mins = config.get("intraday_updates_frequency_mins", 60)
         except KeyError as key:
             logging.error(f"Invalid config.yaml. Missing key: {key}")
             self._enable = False
@@ -71,6 +73,15 @@ class StatsManager:
                 for obj in objects:
                     stat_acc.consume(obj)
 
+    def _log_acummulative_stats(self):
+        summary = "Here's what happened since last daily summary:"
+        for stat_acc in self._stat_accumulators:
+            summary += "\n" + stat_acc.get_summary()
+        logging.info(summary)
+        self._notify_manager.process_events(
+            [Event(type=EventType.USER, priority=EventPriority.LOW, service=EventService.PERFORMANCE, message=summary)]
+        )
+
     def _send_daily_notification(self):
         summary = "Hello farmer! 👋 Here's what happened in the last 24 hours:\n"
         for stat_acc in self._stat_accumulators:
@@ -82,7 +93,14 @@ class StatsManager:
         )
 
     def _run_loop(self):
+        update_freq_seconds = int(self._intraday_updates_frequency_mins * 60)
+        now = datetime.now().timestamp()
+        next_update_timestamp = now + update_freq_seconds
         while self._is_running:
+            now = datetime.now().timestamp()
+            if self._intraday_updates_enable and now > next_update_timestamp:
+                next_update_timestamp = now + update_freq_seconds
+                self._log_acummulative_stats()
             if datetime.now() > self._datetime_next_summary:
                 self._send_daily_notification()
                 self._datetime_next_summary += timedelta(days=1)

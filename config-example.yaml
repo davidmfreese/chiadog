@@ -30,6 +30,9 @@ keep_alive_monitor:
 daily_stats:
   enable: true
   time_of_day: 21
+  # send intraday updates at interval specified
+  intraday_updates_enable: false
+  intraday_updates_frequency_mins: 60
 
 # We support a lot of notifiers, please check the README for more
 # information. You can delete the sections which you aren't using.

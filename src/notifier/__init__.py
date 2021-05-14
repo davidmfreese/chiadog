@@ -41,6 +41,7 @@ class EventService(Enum):
     FARMER = 1
     FULL_NODE = 2
     DAILY = 3
+    PERFORMANCE = 4
 
 
 @dataclass
@@ -63,7 +64,7 @@ class Notifier(ABC):
         self._config = config
         self._conn_timeout_seconds = 10
         self._notification_types = [EventType.USER]
-        self._notification_services = [EventService.HARVESTER, EventService.FARMER, EventService.FULL_NODE]
+        self._notification_services = [EventService.HARVESTER, EventService.FARMER, EventService.FULL_NODE, EventService.PERFORMANCE]
 
         try:
             if config["daily_stats"]:
